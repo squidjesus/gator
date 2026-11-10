@@ -15,7 +15,7 @@ func main() {
 	cfg, err := config.Read()
 	if err != nil {
 		fmt.Println("error reading config", err)
-		return
+		os.Exit(1)
 	}
 	s := state{ &cfg }
 	cmds := commands{ 
@@ -28,7 +28,7 @@ func main() {
 	// parse arguments and run cmd
 	if len(os.Args) < 2 {
 		fmt.Println("Expected at least 1 argument")
-		return
+		os.Exit(1)
 	}
 	cmd := command{
 		name: os.Args[1],
@@ -36,6 +36,6 @@ func main() {
 	}
 	if err := cmds.run(&s, cmd); err != nil {
 		fmt.Println(err)
-		return
+		os.Exit(1)
 	}
 }

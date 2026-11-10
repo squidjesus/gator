@@ -16,6 +16,6 @@ func handlerLogin(s *state, cmd command) error {
 		return err
 	}
 
-	fmt.Printf("%s logged in", cmd.args[0])
+	fmt.Printf("%s logged in\n", cmd.args[0])
 	return nil
 }
