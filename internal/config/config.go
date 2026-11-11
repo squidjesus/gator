@@ -47,7 +47,7 @@ func (c Config) Write() error {
 	if err != nil {
 		return err
 	}
-	json, err := json.Marshal(c)
+	json, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return err
 	}
