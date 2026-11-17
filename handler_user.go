@@ -19,7 +19,7 @@ func handlerLogin(s *state, cmd command) error {
 		return err
 	}
 
-	err = s.config.SetUser(user.Name)
+	err = s.config.SetUser(user)
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func handlerRegister( s *state, cmd command) error {
 		return err
 	}
 
-	err = s.config.SetUser(user.Name)
+	err = s.config.SetUser(user)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func handlerGetUsers(s *state, cmd command) error {
 		return err
 	}
 	for _, user := range users {
-		if user == s.config.Current_user_name{
+		if user == s.config.Current_user.Name{
 			fmt.Printf("* %s (current)\n", user)
 			continue
 		}

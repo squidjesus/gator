@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"github.com/squidjesus/gator/internal/database"
 )
 
 type Config struct {
 	Db_url            string `json:"db_url"`
-	Current_user_name string `json:"current_user_name"`
+	Current_user	  database.User `json:"current_user"`
 }
 
 const configFileName = ".gatorconfig.json"
@@ -33,8 +34,8 @@ func Read() (Config, error) {
 	return cfg, nil
 }
 
-func (c Config) SetUser(name string) error {
-	c.Current_user_name = name
+func (c Config) SetUser(user database.User) error {
+	c.Current_user = user
 	err := c.Write()
 	if err != nil {
 		return err
