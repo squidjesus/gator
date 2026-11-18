@@ -49,9 +49,25 @@ func handlerAddFeed(s *state, cmd command) error {
 	fmt.Println("Updated at: " + feed.UpdatedAt.Format(time.DateTime))
 	fmt.Println("Name: " + feed.Name)
 	fmt.Println("Url: " + feed.Url)
-	fmt.Printf("User ID: %v\n", feed.UserID)
+	fmt.Printf("User ID: %v\n", s.config.Current_user.Name)
+
+	// Add follow
+	followParams := database.CreateFeedFollowParams{
+		ID:			uuid.New(),
+		CreatedAt:	time.Now(),
+		UpdatedAt:	time.Now(),
+		UserID:		s.config.Current_user.ID,
+		FeedID:		feed.ID,
+	}
+
+	_, err = s.db.CreateFeedFollow(context.Background(), followParams)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
+
 
 func handlerFeeds(s *state, cmd command) error {
 	if len(cmd.args) > 0 {

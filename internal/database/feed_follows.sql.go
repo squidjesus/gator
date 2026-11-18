@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
-const createFeedFollow = `-- name: CreateFeedFollow :many
+const createFeedFollow = `-- name: CreateFeedFollow :one
 WITH inserted_feed_follow AS (
     INSERT INTO feed_follows (id, created_at, updated_at, user_id, feed_id)
     VALUES ($1, $2, $3, $4, $5)
@@ -24,8 +24,8 @@ SELECT
     users.name AS user_name
 FROM
     inserted_feed_follow
-INNER JOIN feeds ON feeds.name = inserted_feed_follow.feed_name
-INNER JOIN users ON users.name = inserted_feed_follow.user_name
+INNER JOIN feeds ON feeds.id = inserted_feed_follow.feed_id
+INNER JOIN users ON users.id = inserted_feed_follow.user_id
 `
 
 type CreateFeedFollowParams struct {
@@ -46,29 +46,62 @@ type CreateFeedFollowRow struct {
 	UserName  string
 }
 
-func (q *Queries) CreateFeedFollow(ctx context.Context, arg CreateFeedFollowParams) ([]CreateFeedFollowRow, error) {
-	rows, err := q.db.QueryContext(ctx, createFeedFollow,
+func (q *Queries) CreateFeedFollow(ctx context.Context, arg CreateFeedFollowParams) (CreateFeedFollowRow, error) {
+	row := q.db.QueryRowContext(ctx, createFeedFollow,
 		arg.ID,
 		arg.CreatedAt,
 		arg.UpdatedAt,
 		arg.UserID,
 		arg.FeedID,
 	)
+	var i CreateFeedFollowRow
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.UserID,
+		&i.FeedID,
+		&i.FeedName,
+		&i.UserName,
+	)
+	return i, err
+}
+
+const getFeedFollowsForUser = `-- name: GetFeedFollowsForUser :many
+SELECT
+    feed_follows.user_id,
+    feed_follows.feed_id,
+    users.name AS user_name,
+    feeds.name AS feed_name
+FROM
+    feed_follows
+INNER JOIN feeds ON feeds.id = feed_follows.feed_id
+INNER JOIN users ON users.id = feed_follows.user_id
+WHERE
+    users.id = $1
+`
+
+type GetFeedFollowsForUserRow struct {
+	UserID   uuid.UUID
+	FeedID   uuid.UUID
+	UserName string
+	FeedName string
+}
+
+func (q *Queries) GetFeedFollowsForUser(ctx context.Context, id uuid.UUID) ([]GetFeedFollowsForUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, getFeedFollowsForUser, id)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []CreateFeedFollowRow
+	var items []GetFeedFollowsForUserRow
 	for rows.Next() {
-		var i CreateFeedFollowRow
+		var i GetFeedFollowsForUserRow
 		if err := rows.Scan(
-			&i.ID,
-			&i.CreatedAt,
-			&i.UpdatedAt,
 			&i.UserID,
 			&i.FeedID,
-			&i.FeedName,
 			&i.UserName,
+			&i.FeedName,
 		); err != nil {
 			return nil, err
 		}
