@@ -26,14 +26,14 @@ func handlerAgg(s *state, cmd command) error {
 	return nil
 }
 
-func handlerAddFeed(s *state, cmd command) error {
+func handlerAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.args) > 2 || len(cmd.args) <= 1 {
 		return errors.New("Requires 2 arguments: <name> <url>")
 	}
 
 	params := database.AddFeedParams{
 		ID: uuid.New(),
-		UserID: s.config.Current_user.ID,
+		UserID: user.ID,
 		Name: cmd.args[0],
 		Url: cmd.args[1],
 	}
@@ -49,14 +49,14 @@ func handlerAddFeed(s *state, cmd command) error {
 	fmt.Println("Updated at: " + feed.UpdatedAt.Format(time.DateTime))
 	fmt.Println("Name: " + feed.Name)
 	fmt.Println("Url: " + feed.Url)
-	fmt.Printf("User ID: %v\n", s.config.Current_user.Name)
+	fmt.Printf("User ID: %v\n", user.ID)
 
 	// Add follow
 	followParams := database.CreateFeedFollowParams{
 		ID:			uuid.New(),
 		CreatedAt:	time.Now(),
 		UpdatedAt:	time.Now(),
-		UserID:		s.config.Current_user.ID,
+		UserID:		user.ID,
 		FeedID:		feed.ID,
 	}
 

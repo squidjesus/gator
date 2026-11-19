@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func handlerFollow(s *state, cmd command) error {
+func handlerFollow(s *state, cmd command, user database.User) error {
 	if len(cmd.args) > 1 || len(cmd.args) == 0 {
 		return errors.New("Requires 1 argument: <url>")
 	}
@@ -25,7 +25,7 @@ func handlerFollow(s *state, cmd command) error {
 		ID:			uuid.New(),
 		CreatedAt:  time.Now(),
 		UpdatedAt:	time.Now(),
-		UserID:		s.config.Current_user.ID,
+		UserID:		user.ID,
 		FeedID:		feed.ID,
 	}
 
@@ -36,22 +36,22 @@ func handlerFollow(s *state, cmd command) error {
 
 	fmt.Println("Feed Follow Added:")
 	fmt.Println("Name: " + feedFollow.FeedName)
-	fmt.Println("Current User: " + s.config.Current_user.Name)
+	fmt.Println("Current User: " + user.Name)
 
 	return nil
 }
 
-func handlerFollowing(s *state, cmd command) error {
+func handlerFollowing(s *state, cmd command, user database.User) error {
 	if len(cmd.args) > 0 {
 		return errors.New("following command takes no args, 0 expected")
 	}
 
-	follows, err := s.db.GetFeedFollowsForUser(context.Background(), s.config.Current_user.ID)
+	follows, err := s.db.GetFeedFollowsForUser(context.Background(), user.ID)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("User: " + s.config.Current_user.Name)
+	fmt.Println("User: " + user.Name)
 	for _, follow := range follows {
 		fmt.Printf(" * %s\n", follow.FeedName)
 	}
