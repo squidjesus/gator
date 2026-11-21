@@ -3,10 +3,13 @@ package main
 import (
 	"net/http"
 	"context"
+	"fmt"
 	"time"
 	"io"
 	"encoding/xml"
 	"html"
+	"github.com/squidjesus/gator/internal/database"
+	"database/sql"
 )
 
 type RSSFeed struct {
@@ -63,3 +66,38 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 
 	return &feed, nil
 }
+
+
+func scrapeFeeds(s *state) error {
+	ctx := context.Background()
+	// get next feed to fetch from the DB
+	nextFeed, err := s.db.GetNextFeedToFetch(ctx)
+	if err != nil {
+		return err
+	}
+	// mark it as fetched
+	nowTime := sql.NullTime{
+		Time: time.Now(),
+		Valid: true,
+	}
+	param := database.MarkFeedFetchedParams{
+		LastFetchedAt: nowTime,
+		UpdatedAt:	   time.Now(),
+		ID:			   nextFeed.ID,
+	}
+	if err := s.db.MarkFeedFetched(ctx, param); err != nil {
+		return err
+	}
+	// fetch the feed by URL
+	fetchedFeed, err := fetchFeed(ctx, nextFeed.Url)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Feed: " + nextFeed.Name + " " + nextFeed.Url)
+	// iterate over items and print 'title'
+	for _, item := range fetchedFeed.Channel.Item {
+		fmt.Println(" * " + item.Title)
+	}
+	return nil
+}
+

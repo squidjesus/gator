@@ -10,18 +10,21 @@ import (
 )
 
 func handlerAgg(s *state, cmd command) error {
-	if len(cmd.args) > 0 {
-		return errors.New("agg command takes no args, 0 expected")
+	if len(cmd.args) < 1 || len(cmd.args) > 1 {
+		return errors.New("agg command takes 1 arg, <duration> ex. '1s', '1m', '1h'")
 	}
 
-	url := "https://www.wagslane.dev/index.xml"
-
-	feed, error := fetchFeed(context.Background(), url)
-	if error != nil {
-		return error
+	interval, err := time.ParseDuration(cmd.args[0])
+	if err != nil {
+		return err
 	}
+	
+	fmt.Printf("Collecting feeds every %s\n", cmd.args[0])
 
-	fmt.Printf("%+v\n", feed)
+	ticker := time.NewTicker(interval)
+	for ; ; <-ticker.C {
+		scrapeFeeds(s)
+	}
 
 	return nil
 }

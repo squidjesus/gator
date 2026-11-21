@@ -59,3 +59,27 @@ func handlerFollowing(s *state, cmd command, user database.User) error {
 	return nil
 }
 
+func handlerUnfollow(s *state, cmd command, user database.User) error {
+	if len(cmd.args) > 1 || len(cmd.args) == 0 {
+		return errors.New("Requires 1 argument: <url>")
+	}
+
+	feed, err := s.db.GetFeedByUrl(context.Background(), cmd.args[0])
+	if err != nil {
+		return err
+	}
+
+	params := database.UnFollowParams{
+		UserID: user.ID,
+		FeedID: feed.ID,
+	}
+
+	_, err = s.db.UnFollow(context.Background(), params)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Un-followed feed: " + feed.Name)
+	return nil
+	
+ }
