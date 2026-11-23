@@ -40,7 +40,7 @@ func main() {
 	}
 
 	// creat cmds stuct and register commands
-	cmds := commands{ 
+	cmds := commands{
 		registry: map[string]func(*state, command) error{},
 	}
 	cmds.register("login", handlerLogin)
@@ -53,6 +53,8 @@ func main() {
 	cmds.register("follow", middlewareLoggedIn(handlerFollow))
 	cmds.register("following", middlewareLoggedIn(handlerFollowing))
 	cmds.register("unfollow", middlewareLoggedIn(handlerUnfollow))
+	cmds.register("browse", middlewareLoggedIn(handlerBrowse))
+
 
 	// parse arguments and run cmd
 	if len(os.Args) < 2 {

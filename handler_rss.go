@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"strconv"
 	"fmt"
 	"context"
 	"time"
@@ -18,7 +19,7 @@ func handlerAgg(s *state, cmd command) error {
 	if err != nil {
 		return err
 	}
-	
+
 	fmt.Printf("Collecting feeds every %s\n", cmd.args[0])
 
 	ticker := time.NewTicker(interval)
@@ -76,7 +77,7 @@ func handlerFeeds(s *state, cmd command) error {
 	if len(cmd.args) > 0 {
 		return errors.New("feeds command takes no args, 0 expected")
 	}
-	
+
 	feeds, err := s.db.GetFeeds(context.Background())
 	if err != nil {
 		return err
@@ -87,5 +88,37 @@ func handlerFeeds(s *state, cmd command) error {
 		fmt.Println("URL: " + feed.Url)
 		fmt.Println("Added by: " + feed.Uname)
 	}
+	return nil
+}
+
+
+func handlerBrowse(s *state, cmd command, user database.User) error {
+	postLimit := int32(2)
+	if len(cmd.args) > 1 {
+		return errors.New("browse command takes 1 optional arg, <number of posts>")
+	}
+	if len(cmd.args) == 1 {
+		num, err := strconv.ParseInt(cmd.args[0], 10, 32)
+		if err != nil {
+			return err
+		}
+		postLimit = int32(num)
+	}
+	param := database.GetPostsForUserParams{
+		UserID: user.ID,
+		Limit: postLimit,
+	}
+	posts, err := s.db.GetPostsForUser(context.Background(), param)
+	if err != nil {
+		return err
+	}
+	for _, post := range posts {
+		fmt.Println("Title: " + post.Title)
+		fmt.Printf("Published: %v\n", post.PublishedAt)
+		fmt.Printf("Description: %s\n", post.Description)
+		fmt.Printf("Link: %s\n", post.Url)
+		fmt.Println()
+	}
+
 	return nil
 }

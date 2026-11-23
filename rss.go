@@ -96,16 +96,17 @@ func scrapeFeeds(s *state) error {
 		return err
 	}
 	fmt.Println("Feed: " + nextFeed.Name + " " + nextFeed.Url)
+
+	postsAdded := 0
 	// iterate over items and print 'title'
 	for _, item := range fetchedFeed.Channel.Item {
-		pubDate := strings.TrimSpace(item.PubDate)
-		parsedTime, err := validateTime(pubDate)
+		parsedTime, err := validateTime(item.PubDate)
 		if err != nil {
 			fmt.Println(err)
 		}
-		desc := sql.NullString{
-			String: item.Description,
-			Valid:  true,
+		parsedDesc, err := validateDesc(item.Description)
+		if err != nil {
+			fmt.Println(err)
 		}
 		postParam := database.CreatePostParams{
 			ID:          uuid.New(),
@@ -113,15 +114,20 @@ func scrapeFeeds(s *state) error {
 			UpdatedAt:   time.Now(),
 			Title:       item.Title,
 			Url:         item.Link,
-			Description: desc,
+			Description: parsedDesc,
 			PublishedAt: parsedTime,
 			FeedID:      nextFeed.ID,
 		}
-		post, err := s.db.CreatePost(ctx, postParam)
+		err = s.db.CreatePost(ctx, postParam)
 		if err != nil {
-			return err
+			if strings.Contains(err.Error(), "unique constraint \"posts_url_key\"") {
+				continue
+			} else {
+				return err
+			}
 		}
-		fmt.Printf("%+v\n", post)
+		postsAdded += 1
 	}
+	fmt.Printf("New posts: %d\n", postsAdded)
 	return nil
 }

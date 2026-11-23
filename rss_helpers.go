@@ -2,37 +2,47 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
+	"errors"
+
+	//"fmt"
+	"strings"
 	"time"
 )
 
 func validateTime(pubDate string) (sql.NullTime, error) {
-	var parsedTime sql.NullTime
-	parsed, err := time.Parse(time.RFC1123, pubDate)
-	if err == nil {
-		parsedTime.Time = parsed
-		parsedTime.Valid = true
-		return parsedTime, nil
-	} else {
-		fmt.Println(err)
+	var t time.Time
+	cleanedTime := strings.TrimSpace(pubDate)
+	parsedTime := sql.NullTime{
+		Time:  t,
+		Valid: false,
 	}
-	parsed, err = time.Parse(time.RFC1123Z, pubDate)
-	if err == nil {
-		parsedTime.Time = parsed
-		parsedTime.Valid = true
-		return parsedTime, nil
-	} else {
-		fmt.Println(err)
+	layouts := []string{
+		time.RFC1123Z,
+		time.RFC1123,
+		time.RFC3339,
+		time.RFC3339Nano,
+		time.RFC822,
+		time.RFC822Z,
 	}
-	parsedTime.Time = time.Now()
-	parsedTime.Valid = false
-
-	return parsedTime, err
+	for _, layout := range layouts {
+		if parsed, err := time.Parse(layout, cleanedTime); err == nil {
+			parsedTime.Time = parsed
+			parsedTime.Valid = true
+			return parsedTime, nil
+		}
+	}
+	return parsedTime, errors.New("Time not parsed, returning invalid")
 }
 
-/*
 func validateDesc(desc string) (sql.NullString, error) {
-	var parsedDesc sql.NullString
-	if desc == ""
+	parsedDesc := sql.NullString{
+		String: "",
+		Valid:  false,
+	}
+	if desc != "" {
+		parsedDesc.String = desc
+		parsedDesc.Valid = true
+		return parsedDesc, nil
+	}
+	return parsedDesc, errors.New("No description provided")
 }
-i*/
