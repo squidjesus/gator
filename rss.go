@@ -1,15 +1,17 @@
 package main
 
 import (
-	"net/http"
 	"context"
-	"fmt"
-	"time"
-	"io"
-	"encoding/xml"
-	"html"
-	"github.com/squidjesus/gator/internal/database"
 	"database/sql"
+	"encoding/xml"
+	"fmt"
+	"html"
+	"io"
+	"net/http"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/squidjesus/gator/internal/database"
 )
 
 type RSSFeed struct {
@@ -67,7 +69,6 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	return &feed, nil
 }
 
-
 func scrapeFeeds(s *state) error {
 	ctx := context.Background()
 	// get next feed to fetch from the DB
@@ -77,13 +78,13 @@ func scrapeFeeds(s *state) error {
 	}
 	// mark it as fetched
 	nowTime := sql.NullTime{
-		Time: time.Now(),
+		Time:  time.Now(),
 		Valid: true,
 	}
 	param := database.MarkFeedFetchedParams{
 		LastFetchedAt: nowTime,
-		UpdatedAt:	   time.Now(),
-		ID:			   nextFeed.ID,
+		UpdatedAt:     time.Now(),
+		ID:            nextFeed.ID,
 	}
 	if err := s.db.MarkFeedFetched(ctx, param); err != nil {
 		return err
@@ -96,8 +97,21 @@ func scrapeFeeds(s *state) error {
 	fmt.Println("Feed: " + nextFeed.Name + " " + nextFeed.Url)
 	// iterate over items and print 'title'
 	for _, item := range fetchedFeed.Channel.Item {
-		fmt.Println(" * " + item.Title)
+		postParam := database.CreatePostParams{
+			ID:          uuid.New(),
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+			Title:       item.Title,
+			Url:         item.Link,
+			Description: item.Description,
+			PublishedAt: item.PubDate,
+			FeedID:      nextFeed.ID,
+		}
+		post, err := s.db.CreatePost(ctx, postParam)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("%+v\n", post)
 	}
 	return nil
 }
-
