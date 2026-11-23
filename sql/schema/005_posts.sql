@@ -4,11 +4,11 @@ CREATE TABLE posts (
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
     title TEXT NOT NULL,
-    url TEXT UNIQUE NOT NULL,
-    description TEXT NOT NULL,
-    published_at TEXT NOT NULL,
+    url TEXT NOT NULL,
+    description TEXT,
+    published_at TIMESTAMP,
     feed_id UUID NOT NULL,
-    FOREIGN KEY (feed_id) REFERENCES feeds (id)
+    FOREIGN KEY (feed_id) REFERENCES feeds (id) ON DELETE CASCADE
 );
 
 -- +goose Down

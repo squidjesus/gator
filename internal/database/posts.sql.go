@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -24,8 +25,8 @@ type CreatePostParams struct {
 	UpdatedAt   time.Time
 	Title       string
 	Url         string
-	Description string
-	PublishedAt string
+	Description sql.NullString
+	PublishedAt sql.NullTime
 	FeedID      uuid.UUID
 }
 
@@ -78,8 +79,8 @@ type GetPostsForUserRow struct {
 	UpdatedAt   time.Time
 	Title       string
 	Url         string
-	Description string
-	PublishedAt string
+	Description sql.NullString
+	PublishedAt sql.NullTime
 	FeedID      uuid.UUID
 	UserID      uuid.UUID
 }

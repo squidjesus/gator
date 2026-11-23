@@ -8,6 +8,7 @@ import (
 	"html"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -97,14 +98,23 @@ func scrapeFeeds(s *state) error {
 	fmt.Println("Feed: " + nextFeed.Name + " " + nextFeed.Url)
 	// iterate over items and print 'title'
 	for _, item := range fetchedFeed.Channel.Item {
+		pubDate := strings.TrimSpace(item.PubDate)
+		parsedTime, err := validateTime(pubDate)
+		if err != nil {
+			fmt.Println(err)
+		}
+		desc := sql.NullString{
+			String: item.Description,
+			Valid:  true,
+		}
 		postParam := database.CreatePostParams{
 			ID:          uuid.New(),
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 			Title:       item.Title,
 			Url:         item.Link,
-			Description: item.Description,
-			PublishedAt: item.PubDate,
+			Description: desc,
+			PublishedAt: parsedTime,
 			FeedID:      nextFeed.ID,
 		}
 		post, err := s.db.CreatePost(ctx, postParam)
