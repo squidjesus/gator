@@ -78,7 +78,7 @@ const getFeeds = `-- name: GetFeeds :many
 SELECT
     feeds.name,
     feeds.url,
-    users.name AS uname 
+    users.name AS uname
 FROM
     feeds
 INNER JOIN

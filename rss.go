@@ -72,6 +72,7 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 
 func scrapeFeeds(s *state) error {
 	ctx := context.Background()
+
 	// get next feed to fetch from the DB
 	nextFeed, err := s.db.GetNextFeedToFetch(ctx)
 	if err != nil {
