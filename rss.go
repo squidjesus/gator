@@ -113,7 +113,7 @@ func scrapeFeeds(s *state) error {
 			ID:          uuid.New(),
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
-			Title:       item.Title,
+			Title:       html.UnescapeString(item.Title),
 			Url:         item.Link,
 			Description: parsedDesc,
 			PublishedAt: parsedTime,

@@ -5,11 +5,13 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
 -- name: GetPostsForUser :many
 SELECT
     posts.*,
-    feeds.user_id
+    feeds.name AS feed_name
 FROM
     posts
-    INNER JOIN feeds ON posts.feed_id = feeds.id
+    JOIN feed_follows ON posts.feed_id = feed_follows.feed_id
+    JOIN feeds ON posts.feed_id = feeds.id
 WHERE
-    feeds.user_id = $1
+    feed_follows.user_id = $1
+ORDER BY posts.published_at DESC
 LIMIT
     $2;

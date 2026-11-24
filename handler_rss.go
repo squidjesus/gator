@@ -1,11 +1,12 @@
 package main
 
 import (
-	"errors"
-	"strconv"
-	"fmt"
 	"context"
+	"errors"
+	"fmt"
+	"strconv"
 	"time"
+
 	"github.com/google/uuid"
 	"github.com/squidjesus/gator/internal/database"
 )
@@ -26,8 +27,6 @@ func handlerAgg(s *state, cmd command) error {
 	for ; ; <-ticker.C {
 		scrapeFeeds(s)
 	}
-
-	return nil
 }
 
 func handlerAddFeed(s *state, cmd command, user database.User) error {
@@ -36,10 +35,10 @@ func handlerAddFeed(s *state, cmd command, user database.User) error {
 	}
 
 	params := database.AddFeedParams{
-		ID: uuid.New(),
+		ID:     uuid.New(),
 		UserID: user.ID,
-		Name: cmd.args[0],
-		Url: cmd.args[1],
+		Name:   cmd.args[0],
+		Url:    cmd.args[1],
 	}
 
 	feed, err := s.db.AddFeed(context.Background(), params)
@@ -57,11 +56,11 @@ func handlerAddFeed(s *state, cmd command, user database.User) error {
 
 	// Add follow
 	followParams := database.CreateFeedFollowParams{
-		ID:			uuid.New(),
-		CreatedAt:	time.Now(),
-		UpdatedAt:	time.Now(),
-		UserID:		user.ID,
-		FeedID:		feed.ID,
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		UserID:    user.ID,
+		FeedID:    feed.ID,
 	}
 
 	_, err = s.db.CreateFeedFollow(context.Background(), followParams)
@@ -71,7 +70,6 @@ func handlerAddFeed(s *state, cmd command, user database.User) error {
 
 	return nil
 }
-
 
 func handlerFeeds(s *state, cmd command) error {
 	if len(cmd.args) > 0 {
@@ -84,13 +82,13 @@ func handlerFeeds(s *state, cmd command) error {
 	}
 
 	for _, feed := range feeds {
-		fmt.Println("Name: " + feed.Name)
-		fmt.Println("URL: " + feed.Url)
-		fmt.Println("Added by: " + feed.Uname)
+		fmt.Println(feed.Name)
+		fmt.Println(" * URL: " + feed.Url)
+		fmt.Println(" * Added by: " + feed.Uname)
+		fmt.Println()
 	}
 	return nil
 }
-
 
 func handlerBrowse(s *state, cmd command, user database.User) error {
 	postLimit := int32(2)
@@ -106,17 +104,21 @@ func handlerBrowse(s *state, cmd command, user database.User) error {
 	}
 	param := database.GetPostsForUserParams{
 		UserID: user.ID,
-		Limit: postLimit,
+		Limit:  postLimit,
 	}
 	posts, err := s.db.GetPostsForUser(context.Background(), param)
 	if err != nil {
 		return err
 	}
 	for _, post := range posts {
-		fmt.Println("Title: " + post.Title)
-		fmt.Printf("Published: %v\n", post.PublishedAt)
-		fmt.Printf("Description: %s\n", post.Description)
+		fmt.Println("** " + post.Title + " **")
+		fmt.Println("[[" + post.FeedName + "]]")
+		fmt.Printf("- Published: %v\n", post.PublishedAt)
+		fmt.Println()
+		fmt.Printf("%s\n", post.Description.String)
+		fmt.Println()
 		fmt.Printf("Link: %s\n", post.Url)
+		fmt.Println()
 		fmt.Println()
 	}
 

@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"html"
 
 	//"fmt"
 	"strings"
@@ -40,7 +41,7 @@ func validateDesc(desc string) (sql.NullString, error) {
 		Valid:  false,
 	}
 	if desc != "" {
-		parsedDesc.String = desc
+		parsedDesc.String = html.UnescapeString(desc)
 		parsedDesc.Valid = true
 		return parsedDesc, nil
 	}
